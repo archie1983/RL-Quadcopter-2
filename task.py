@@ -3,8 +3,8 @@ from physics_sim import PhysicsSim
 
 class Task():
     """Task (environment) that defines the goal and provides feedback to the agent."""
-    def __init__(self, init_pose, init_velocities=None, 
-        init_angle_velocities=None, runtime=5., target_pos=None):
+    def __init__(self, init_pose, init_velocities, 
+        init_angle_velocities, runtime=5., target_pos=None):
         """Initialize a Task object.
         Params
         ======
@@ -15,16 +15,19 @@ class Task():
             target_pos: target/goal (x,y,z) position for the agent
         """
         # Simulation
+        # AE: Initial state will contain pose (position and angles of the copter), angular velocities (copter stability)
+        #self.initial_state = np.concatenate((init_pose, init_angle_velocities))
+        # AE: and the copter dimensional velocities (speed)
+        self.initial_state = np.concatenate((init_pose, init_velocities, init_angle_velocities))
         # AE: We are not allowed to change physics_sim.py, but it will only work with a 6-dimensional
         # AE: state, so I must trim it here, but for my Neural Networks, I will use the full state.
-        self.sim = PhysicsSim(init_pose[:6], init_velocities, init_angle_velocities, runtime) 
+        self.sim = PhysicsSim(self.initial_state[:6], init_velocities, init_angle_velocities, runtime) 
         self.action_repeat = 3
 
-        self.state_size = self.action_repeat * len(init_pose)
-        self.action_low = 0
-        self.action_high = 900
+        self.state_size = self.action_repeat * len(self.initial_state)
+        self.action_low = 400
+        self.action_high = 1200
         self.action_size = 4
-        self.init_pose = init_pose
 
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.]) 
@@ -42,7 +45,48 @@ class Task():
         # AE: change anything in physcis_sim.py, so we will still need to pass the old 6-dimensional pose to the physcis_sim.py
         # AE: functions, but use more dimensions here in the task.py and that of course will give more features and weights to
         # AE: the neural nets of critic and actor.
-        reward = 1. - .3 * (abs(self.sim.pose[:3] - self.target_pos)).sum() - .3 * (abs(self.sim.pose[3:])).sum()
+        #reward = 1. - .3 * (abs(self.sim.pose[:3] - self.target_pos)).sum() - .3 * (abs(self.sim.pose[3:6])).sum()
+        
+        # AE: Because the state now contains copter velocity and its angular velocities, I should improve the reward
+        # AE: function to take that into account. The agent is already being penalised for going in the wrong direction
+        # AE: for each dimension (first term in the reward function). The agent is also being penalised for making the copter
+        # AE: unstable (angles not level). I could also reward the agent for having higher
+        # AE: speed at the beginning and reducing it as it gets closer. That should help it to not overshoot or undershoot.
+        # AE: To achieve that, I will need to take into account the remaining distance in each dimension and each value of the
+        # AE: speed vector. Perhaps I want the speed to be the same as the remaining distance. I.e. if the copter is 10m
+        # AE: away from the target, then it should move towards the target at 10m/s, then after 1/10s = 100ms, it will be 9m away
+        # AE: from the target and it should reduce its speed to 9m/s, then 1/9 s later it will be 8m away and so on, which 
+        # AE: will increase the time it takes to reach the target (instead of 1s, it would now take: 
+        # AE: 1/10 + 1/9 + 1/8 + 1/7 + 1/6 + 1/5 + 1/4 + 1/3 + 1/2 + 1 = 2.93s), but it would not overshoot anymore.
+        distances = (self.sim.pose[:3] - self.target_pos)
+        velocities = self.sim.v
+        
+        # AE: distance from the target
+        t1 = .25 * (abs(self.sim.pose[:3] - self.target_pos)).sum() 
+        
+        # AE: stability of the copter
+        t2 = .25 * (abs(self.sim.pose[3:6])).sum()
+        
+        # AE: speed in each dimension must reduce when getting nearer the target
+        t3 = .3 * (abs(distances - velocities)).sum() 
+        
+        # AE: Reward for moving in the Z axis and penalise for movement in X and Y axis
+        t4 = 0.25 * ((abs(velocities[0]) + abs(velocities[1])) - abs(velocities[2]))
+        
+        # AE: Jerkiness of the copter on X and Y axis. It can rotate on Z axis ok.
+        t5 = .25 * (abs(self.sim.angular_v[:2])).sum() 
+        #t6 = 1 - np.clip(abs(self.sim.pose[2] - self.target_pos[2]), 0, 1)
+        #t6 = 1 if abs(self.sim.pose[2] - self.target_pos[2]) < 5 else 0
+        #t6 = abs(self.sim.pose[2] - self.target_pos[2]) < 5 else 0
+        
+        # AE: Bonus for coming closer to the Z target Maybe X and Y too?
+        #t6 = abs(self.target_pos[2] - self.initial_state[2]) - abs(self.sim.pose[2] - self.target_pos[2])
+        t6 = 3 * (abs(self.target_pos - self.initial_state[:3]).sum() - abs(self.sim.pose[:3] - self.target_pos).sum())
+        #print(t1, t2, t3, t4)
+        #reward = np.clip((1. - t3 - t2 + t6), -1.0, 10.0)
+        #reward = np.clip((1. - t1 - t2 + t6), -10.0, 10.0)
+        reward = np.clip((1. - t3 - t2 - t5 + t6), -1.0, 10.0)
+
         return reward
 
     def step(self, rotor_speeds):
@@ -54,7 +98,9 @@ class Task():
             reward += self.get_reward() 
             #pose_all.append(self.sim.pose)
             # AE: accomodating the new, expanded state, that also includes angular speeds
-            pose_all.append(np.concatenate((self.sim.pose, self.sim.angular_v)))
+            #pose_all.append(np.concatenate((self.sim.pose, self.sim.angular_v)))
+            # AE: and copter speeds
+            pose_all.append(np.concatenate((self.sim.pose, self.sim.v, self.sim.angular_v)))
         next_state = np.concatenate(pose_all)
         return next_state, reward, done
 
@@ -62,5 +108,6 @@ class Task():
         """Reset the sim to start a new episode."""
         self.sim.reset()
         #state = np.concatenate([self.sim.pose] * self.action_repeat) 
-        state = np.concatenate([self.init_pose] * self.action_repeat) 
+        #state = np.concatenate([self.init_pose] * self.action_repeat)
+        state = np.concatenate([self.initial_state] * self.action_repeat)
         return state
