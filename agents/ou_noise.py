@@ -9,6 +9,7 @@ class OUNoise:
         self.mu = mu * np.ones(size)
         self.theta = theta
         self.sigma = sigma
+        self.size = size
         self.reset()
 
     def reset(self):
@@ -21,3 +22,6 @@ class OUNoise:
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
         self.state = x + dx
         return self.state
+
+    def update_mu(self, newmu):
+        self.mu = newmu * np.ones(self.size)
