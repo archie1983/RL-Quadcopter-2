@@ -1,0 +1,10 @@
+ddpg_critic.py:
+You should tune the values of the hyper-parameters and add the settings like batch normalization, dropouts, L2 regularization, and try out different weight initialization functions in the neural network architects of Actor and Critic methods.
+
+agent.py:
+You should save the model or the value of the weights in H5 files. In that way, you can restore the values of the weights. So, you don't have to train the agent from scratch whenever you want to run the algorithm again.
+
+Check out this keras docs https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+
+task.py:
+In the paper https://arxiv.org/pdf/1509.02971.pdf, you can read about action_repeat which is actually used to infer the velocity with which agent is moving over the frames.

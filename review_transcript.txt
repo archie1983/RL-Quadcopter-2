@@ -1,0 +1,52 @@
+Meets Specifications
+In order to deal with the problem of NaNs, I'd suggest you to normalize the reward values to smaller range by using np.tanh (as suggested in the below review), np.clip, or use any standardization function. I'd think it will be better to use smaller learning rate as the learning algorithm will not overshoot during the gradient descent. Here's the lesson video on tuning the value of learning rate hyper-parameter https://www.youtube.com/watch?v=HLMjeDez7ps
+
+Congratulations on finishing this project! You have done lot of work in this project and you should be proud of yourself for having this worked out. I hope that you had fun in this project. Overall it is very good submission, describing the experience of building this project quite extensively. Well done and good luck with your future endeavors. :)
+
+Define the Task, Define the Agent, and Train Your Agent!
+The agent.py file contains a functional implementation of a reinforcement learning algorithm.
+
+Good job in applying Deep Deterministic Policy Gradients (DDPG) over Deep Q Network (DQN). Because DDPG works on continuous state and action space whereas DQN is meant to solve discrete action space problems.
+
+Critic Value Model computes the Q-values for any given (state, action) pair. After that, the gradient of this Q-value is computed with respect to the corresponding action vector which is then fed in as input for the training of the Actor Policy Model.
+
+You can use DQN by discretizing the continuous state and action space. Check out this notebook solution for the Continuous Mountain Car Environment https://github.com/udacity/reinforcement-learning/blob/master/notebooks/Discretization_Solution.ipynb
+
+The Quadcopter_Project.ipynb notebook includes code to train the agent.
+
+These python visualizations are great way to visualize the movement of the Quadcopter in the simulated environment.
+
+Plot the Rewards
+A plot of rewards per episode is used to illustrate how the agent learns over time.
+
+Reflections
+The submission describes the task and reward function, and the description lines up with the implementation in task.py. It is clear how the reward function can be used to guide the agent to accomplish the task.
+
+It is well documented answer. You have described your intuition behind the designing the reward function.
+
+Check out this blog to read some more tips for designing the reward function. https://bons.ai/blog/deep-reinforcement-learning-models-tips-tricks-for-writing-reward-functions or watch https://www.youtube.com/watch?v=0R3PnJEisqk
+
+Good work in including the proportion of self.sim.v[2] (which is the vertical velocity) into the reward function. So the agent will be rewarded to fly vertical upwards. This will be particularly useful for the takeoff task.
+
+You should normalize the rewards to small value to better help the neural networks learn the gradient parameters without high magnitude deviations. np.tanh() is used to clip the rewards to the standard range of -1.0 to +1.0 to avoid instability in training due to exploding gradients.
+
+Getting a reinforcement learning agent to learn what you actually want it to learn can be hard, and very time consuming. It.ll try to learn the optimal policy according to the reward function you.ve specified, but it is quite hard to address all aspects of the behavior desired. Therefore, you should constrain the agent's movement to the z-axis, because actions in the x and y axes would have been too unstable for the agent to learn.
+
+    self.target_pos[2]
+    self.sim.pose[2]
+The submission provides a detailed description of the agent in agent.py.
+
+You can provide some (not all) descriptions of the agent as follows;
+
+What is DDPG and why you have decided to use it?
+What is the experience replay and what's the use of it? You can refer to this lesson video https://www.youtube.com/watch?v=wX_-SZG-YMQ
+What is the Fixed Q targets that you have implemented, the parameters that you have used like tau? How this technique helps. You can refer to this lesson video https://www.youtube.com/watch?v=SWpyiEezfp4
+What is Ornstein.Uhlenbeck Noise? Why is it used? You can refer to this lesson video https://www.youtube.com/watch?time_continue=73&v=QicxmyE5vTo and the lesson page on Ornstein.Uhlenbeck Noise itself.
+
+The submission discusses the rewards plot. Ideally, the plot shows that the agent has learned (with episode rewards that are gradually increasing). If not, the submission describes in detail various attempted settings (hyperparameters and architectures, etc) that were tested to teach the agent.
+
+A brief overall summary of the experience working on the project is provided, with ideas for further improving the project.
+
+You seemed to have acquired the general overall idea of the reinforcement learning and how it really works i.e. by a lot of trial and error and more importantly patience! Deep RL is still new but it is cutting edge algorithm. Lot of experimentation and various approaches are needed to be taken to get it working! Actually lot of research is also being done in the Deep Reinforcement Learning (DRL) by Google's DeepMind, OpenAI, Nvidia, Unity and many other companies to cut down the training time and find the reliable approach to train these models. Domain expertise seems to be important to work on the real drone to design the reward. You can go over the physics simulator file to understand how this project's Quadcopter works.
+
+If you are excited about the deep reinforcement learning, check out the new Udacity DRLND course https://eu.udacity.com/course/deep-reinforcement-learning-nanodegree--nd893
