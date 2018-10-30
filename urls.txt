@@ -1,0 +1,11 @@
+https://arxiv.org/pdf/1509.02971.pdf
+https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+https://www.youtube.com/watch?v=HLMjeDez7ps
+https://github.com/udacity/reinforcement-learning/blob/master/notebooks/Discretization_Solution.ipynb
+https://bons.ai/blog/deep-reinforcement-learning-models-tips-tricks-for-writing-reward-functions
+https://www.youtube.com/watch?v=0R3PnJEisqk
+https://www.youtube.com/watch?v=wX_-SZG-YMQ
+https://www.youtube.com/watch?v=SWpyiEezfp4
+https://www.youtube.com/watch?time_continue=73&v=QicxmyE5vTo
+
+https://eu.udacity.com/course/deep-reinforcement-learning-nanodegree--nd893
